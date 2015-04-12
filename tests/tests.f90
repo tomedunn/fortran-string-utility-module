@@ -1,220 +1,87 @@
 program main
   use string_utility_module
   implicit none
-  ! local parameters:
-  character(len=*), parameter :: str_lo = 'abcdefghijklmnopqrstuvwxyz'
-  character(len=*), parameter :: str_up = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   ! local variables:
   character(:), allocatable :: str
+  logical, allocatable :: results(:)
 
-  str = str_lo
-  write(*,'("Original string:")')
-  write(*,'(A)') str
-  write(*,'(A)') ''
+  write(*,'("subroutine str_convert_to_lowercase:")')
+  call TEST_str_convert_to_lowercase(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
-  call convert_to_upper_case(str)
-  write(*,'("Uppercase string:")')
-  write(*,'(A)') str
-  write(*,'(A)') ''
+  write(*,'("subroutine str_convert_to_uppercase:")')
+  call TEST_str_convert_to_uppercase(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
-  call convert_to_lower_case(str)
-  write(*,'("Lowercase string:")')
-  write(*,'(A)') str
-  write(*,'(A)') ''
+  write(*,'("function str_is_integer:")')
+  call TEST_str_is_integer(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
-  ! integer tests
-  str = ' '
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1'
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '+1'
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1e'
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1e1'
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1e+1'
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  str = ' 1e+1 '
-  write(*,'("String: ",A)') str
-  if (is_integer(str)) then
-    write(*,'("is a valid integer.")')
-  else
-    write(*,'("is NOT a valid integer.")')
-  end if
-  write(*,'(A)') ''
-
-  ! real tests
-  str = ' '
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '+1'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '+1.'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '.'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1d'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1d1'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = '1d+1'
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
-
-  str = ' 1d+1 '
-  write(*,'("String: ",A)') str
-  if (is_real(str)) then
-    write(*,'("is a valid real.")')
-  else
-    write(*,'("is NOT a valid real.")')
-  end if
-  write(*,'(A)') ''
+  write(*,'("function str_is_real:")')
+  call TEST_str_is_real(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
 contains
 
-  subroutine TEST_convert_to_lower_case( results )
-    logical, intent(inout) :: results(:)
+  subroutine TEST_str_convert_to_lowercase( results )
+    logical, allocatable, intent(out) :: results(:)
     ! local parameters:
+    integer, parameter :: nTests = 1
     character(len=*), parameter :: str_lo = 'abcdefghijklmnopqrstuvwxyz'
     character(len=*), parameter :: str_up = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     ! local variables:
     character(:), allocatable :: str
 
-    str = str_lo
-    call convert_to_upper_case(str)
-    results(1) = all(str == str_up)
-  end subroutine TEST_convert_to_lower_case
-
-  subroutine TEST_convert_to_upper_case( results )
-    logical, intent(inout) :: results(:)
-    ! local parameters:
-    character(len=*), parameter :: str_lo = 'abcdefghijklmnopqrstuvwxyz'
-    character(len=*), parameter :: str_up = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    ! local variables:
-    character(:), allocatable :: str
+    allocate(results(nTests))
 
     str = str_up
-    call convert_to_upper_case(str)
-    results(1) = all(str == str_lo)
-  end subroutine TEST_convert_to_upper_case
+    call str_convert_to_lowercase(str)
+    results(1) = str == str_lo
+  end subroutine TEST_str_convert_to_lowercase
 
-  subroutine TEST_is_integer( results )
-    logical, intent(inout) :: results(:)
+  subroutine TEST_str_convert_to_uppercase( results )
+    logical, allocatable, intent(out) :: results(:)
+    ! local parameters:
+    integer, parameter :: nTests = 1
+    character(len=*), parameter :: str_lo = 'abcdefghijklmnopqrstuvwxyz'
+    character(len=*), parameter :: str_up = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    ! local variables:
+    character(:), allocatable :: str
 
-    results(1) = is_integer(' 1'       )
-    results(2) = is_integer(' +1'      )
-    results(3) = is_integer(' +1e0'    )
-    results(4) = is_integer(' +1e+0'   )
-  end subroutine TEST_is_integer
+    allocate(results(nTests))
 
-  subroutine TEST_is_real( results )
-    logical, intent(inout) :: results(:)
+    str = str_lo
+    call str_convert_to_uppercase(str)
+    results(1) = str == str_up
+  end subroutine TEST_str_convert_to_uppercase
 
-    results(1) = is_real(' 1'       )
-    results(2) = is_real(' +1'      )
-    results(3) = is_real(' +1.'     )
-    results(4) = is_real(' +1.0'    )
-    results(5) = is_real(' +1.d0'   )
-    results(6) = is_real(' +1.0d0'  )
-    results(7) = is_real(' +1.0d+0' )
-    results(8) = is_real(' +1.0d+0 ')
-  end subroutine TEST_is_real
+  subroutine TEST_str_is_integer( results )
+    logical, allocatable, intent(out) :: results(:)
+    ! local parameters:
+    integer, parameter :: nTests = 4
+
+    allocate(results(nTests))
+
+    results(1) = str_is_integer(' 1     ')
+    results(2) = str_is_integer(' +1    ')
+    results(3) = str_is_integer(' +1e0  ')
+    results(4) = str_is_integer(' +1e+0 ')
+  end subroutine TEST_str_is_integer
+
+  subroutine TEST_str_is_real( results )
+    logical, allocatable, intent(out) :: results(:)
+    ! local parameters:
+    integer, parameter :: nTests = 8
+
+    allocate(results(nTests))
+
+    results(1) = str_is_real(' 1       ')
+    results(2) = str_is_real(' +1      ')
+    results(3) = str_is_real(' +1.     ')
+    results(4) = str_is_real(' +1.0    ')
+    results(5) = str_is_real(' +1.d0   ')
+    results(6) = str_is_real(' +1.0d0  ')
+    results(7) = str_is_real(' +1.0d+0 ')
+    results(8) = str_is_real(' +1.0d+0 ')
+  end subroutine TEST_str_is_real
 end program main
