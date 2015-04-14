@@ -11,19 +11,45 @@ module string_utility_module
   public :: str_convert_to_uppercase
   public :: str_is_integer
   public :: str_is_real
+  public :: str_loc_end_token
+  public :: str_loc_next_real
+  public :: str_loc_next_space
+  public :: str_loc_next_token
+  public :: str_loc_start_token
   public :: str_lowercase
+  public :: str_parse_next_token
   public :: str_uppercase
 
   ! parameters:
   integer, parameter :: CK = selected_char_kind('DEFAULT')
   !integer, parameter :: LK = logical_kinds(min(3,size(logical_kinds)))
 
-  character(kind=CK,len=*), parameter :: space           = ' '
-  character(kind=CK,len=*), parameter :: tab             = achar(9)
-  character(kind=CK,len=*), parameter :: newline         = achar(10)
-  character(kind=CK,len=*), parameter :: vertical_tab    = achar(11)
-  character(kind=CK,len=*), parameter :: form_feed       = achar(12)
-  character(kind=CK,len=*), parameter :: carriage_return = achar(13)
+  character(kind=CK,len=*), parameter :: SPACE           = ' '
+  character(kind=CK,len=*), parameter :: TAB             = achar(9)
+  character(kind=CK,len=*), parameter :: NEWLINE         = achar(10)
+  character(kind=CK,len=*), parameter :: VERTICAL_TAB    = achar(11)
+  character(kind=CK,len=*), parameter :: FORM_FEED       = achar(12)
+  character(kind=CK,len=*), parameter :: CARRIAGE_RETURN = achar(13)
+
+  character(kind=CK,len=*), parameter :: SPACES = SPACE//TAB//NEWLINE &
+    //VERTICAL_TAB//FORM_FEED//CARRIAGE_RETURN
+
+  character(kind=CK,len=*), parameter :: LETTERS_LC = 'abcdefghijklmnopqrstuvwxyz'
+  character(kind=CK,len=*), parameter :: LETTERS_UC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  character(kind=CK,len=*), parameter :: LETTERS    = LETTERS_LC//LETTERS_UC
+
+  character(kind=CK,len=*), parameter :: COMMA     = ','
+  character(kind=CK,len=*), parameter :: SEMICOLON = ';'
+  character(kind=CK,len=*), parameter :: COLON     = ':'
+
+  character(kind=CK,len=*), parameter :: BRACKET_LEFT  = '['
+  character(kind=CK,len=*), parameter :: BRACKET_RIGHT = ']'
+
+  character(kind=CK,len=*), parameter :: PARENTHESES_LEFT  = '('
+  character(kind=CK,len=*), parameter :: PARENTHESES_RIGHT = ')'
+
+  character(kind=CK,len=*), parameter :: DELIMITERS = SPACES//COMMA//COLON &
+    //SEMICOLON//BRACKET_LEFT//BRACKET_RIGHT//PARENTHESES_LEFT//PARENTHESES_RIGHT
 
 contains
 
@@ -150,7 +176,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! convert_to_lowercase:
+! str_convert_to_lowercase:
 !
 !   Converts upper case characters in the given character string to lower case.
 !
@@ -166,7 +192,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! convert_to_uppercase:
+! str_convert_to_uppercase:
 !
 !   Takes character array and coverts all characters a-z to upper-case.
 !   Conversion is done in place.
@@ -183,12 +209,12 @@ contains
 !===============================================================================
 
 !===============================================================================
-! get_next_character:
+! str_get_next_character:
 !
 !   Gets the next non-whitespace character from the given string. If no such
 !   characters are found then a space is returned.
 !
-  pure subroutine get_next_character( str, ch, ich )
+  pure subroutine str_get_next_character( str, ch, ich )
     character(kind=CK,len=*), intent(in)  :: str
     character(kind=CK,len=1), intent(out) :: ch
     integer, intent(inout), optional :: ich
@@ -214,7 +240,7 @@ contains
     end do
 
     if (present(ich)) ich = i
-  end subroutine get_next_character
+  end subroutine str_get_next_character
 !===============================================================================
 
 !===============================================================================
@@ -348,7 +374,7 @@ contains
     has_leading_digit = .false.
     do i = 1, len(str)
       select case(str(i:i))
-      case (space,tab)
+      case (SPACE,TAB)
         ! white space
         select case (stage)
         case (0,8)
@@ -419,6 +445,216 @@ contains
 !===============================================================================
 
 !===============================================================================
+! str_loc_end_delimeter:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure function str_loc_end_delimeter( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    val = verify(str, DELIMITERS)
+    if (val == 0) then
+      val = len(str)
+    else
+      val = val - 1
+    end if
+  end function str_loc_end_delimeter
+!===============================================================================
+
+!===============================================================================
+! str_loc_end_token:
+!
+!   Returns the location of the last valid token character starting from the
+!   begining of the string. Returns 0 if no valid token characters were found.
+!
+  pure function str_loc_end_token( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    ! find first delimiter character
+    val = scan(str, DELIMITERS)
+    if (val == 0) then
+      ! no delimiter characters were found
+      val = len(str)
+    else
+      val = val - 1
+    end if
+  end function str_loc_end_token
+!===============================================================================
+
+!===============================================================================
+! str_loc_next_delimeter:
+!
+!   Returns the location of the first delimiter character in the given string.
+!   Returns 0 if no delimiter is found.
+!
+  pure function str_loc_next_delimiter( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    val = scan(str, DELIMITERS)
+  end function str_loc_next_delimiter
+!===============================================================================
+
+!===============================================================================
+! str_loc_next_letter:
+!
+!   Returns the location of the first letter in the given string. Returns 0 if
+!   no letter is found.
+!
+  pure function str_loc_next_letter( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    val = scan(str, LETTERS)
+  end function str_loc_next_letter
+!===============================================================================
+
+!===============================================================================
+! str_loc_next_real:
+!
+!   Returns .TRUE. if the given string contains a real value. Returns .FALSE.
+!   otherwise.
+!       ans   |F |F      |T  |T   |T  |F      |F      |T     |T|
+!       stage |0 |1      |2  |3   |4  |5      |6      |7     |8|
+!       regex |   [\+\-]? \d* (\.? \d* ([deDE] [\+\-]? \d+)?)  |
+!
+  pure function str_loc_next_real( str ) result( loc )
+    character(kind=CK,len=*), intent(in) :: str
+    integer :: loc
+    ! local variables:
+    integer :: i, i0
+    logical :: has_leading_digit
+    integer :: stage
+
+
+    ! determine number type and length
+    stage = 0
+    has_leading_digit = .false.
+    do i = 1, len(str)
+      if (stage == 0) i0 = i
+
+      select case(str(i:i))
+      case (SPACE,TAB,NEWLINE,CARRIAGE_RETURN,';',':',',','{','}','(',')','[',']')
+        select case(stage)
+        case(-1)
+          stage = 0
+        case (2:4,7)
+          stage = 8
+        end select
+      case ('+','-')
+        select case(stage)
+        case(0)
+          stage = 1
+        case(5)
+          stage = 6
+        case default
+          stage = -1
+        end select
+      case ('0':'9')
+        select case(stage)
+        case(0:1)
+          stage = 2
+          has_leading_digit = .true.
+        case(3)
+          stage = 4
+        case(5:6)
+          stage = 7
+        case default
+          continue
+        end select
+      case ('.')
+        select case(stage)
+        case(0:2)
+          stage = 3
+        case default
+          stage = -1
+        end select
+      case ('e','E','d','D')
+        select case(stage)
+        case(2,4)
+          stage = 5
+        case (3)
+          if (has_leading_digit) then
+            stage = 5
+          else
+            stage = -1
+          end if
+        case default
+          stage = -1
+        end select
+      case default
+        stage = -1
+      end select
+
+      if (stage == 8) exit
+      if (stage == -1) has_leading_digit = .false.
+    end do
+
+    loc = 0
+    select case(stage)
+    case (2,4,7,8)
+      loc = i0
+    case (3)
+      if (has_leading_digit) loc = i0
+    end select
+  end function str_loc_next_real
+!===============================================================================
+
+!===============================================================================
+! str_loc_next_space:
+!
+!   Returns the location of the first space in the given string. Returns 0 if no
+!   space is found.
+!
+  pure function str_loc_next_space( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    val = scan(str, SPACES)
+  end function str_loc_next_space
+!===============================================================================
+
+!===============================================================================
+! str_loc_next_token:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure subroutine str_loc_next_token( str, i0, i1 )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(inout) :: i0
+    integer, intent(inout) :: i1
+
+    i0 = str_loc_start_token(str)
+    if (i0 == 0) then
+      i1 = 0
+    else
+      i1 = i0 + str_loc_end_token(str(i0:)) - 1
+    end if
+  end subroutine str_loc_next_token
+!===============================================================================
+
+!===============================================================================
+! str_loc_start_token:
+!
+!   Returns the location of the first valid token character. Returns 0 if no
+!   valid token characters are found.
+!
+  pure function str_loc_start_token( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    ! find the first non-delimiter character
+    val = verify(str, DELIMITERS)
+  end function str_loc_start_token
+!===============================================================================
+
+!===============================================================================
 ! str_lowercase:
 !
 !   Returns given string with all characters A-Z converted to lower case.
@@ -429,6 +665,33 @@ contains
     lstr = str
     call str_convert_to_lowercase(lstr)
   end function str_lowercase
+!===============================================================================
+
+!===============================================================================
+! str_parse_next_token:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure subroutine str_parse_next_token( str, i, token )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(inout) :: i
+    character(kind=CK,len=:), allocatable, intent(out) :: token
+    ! local characters:
+    integer :: i0, i1
+
+    call str_loc_next_token(str(i:), i0, i1)
+    if (i0 == 0) then
+      token = ''
+      i = len_trim(str)
+    else
+      i0 = i0 + i - 1
+      i1 = i1 + i - 1
+      token = str(i0:i1)
+      i = i1 + 1
+    end if
+  end subroutine str_parse_next_token
 !===============================================================================
 
 !===============================================================================
