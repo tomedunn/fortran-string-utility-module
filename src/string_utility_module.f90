@@ -6,19 +6,22 @@ module string_utility_module
 
   private
 
-  ! public procedures:
-  public :: str_convert_to_lowercase
-  public :: str_convert_to_uppercase
+  ! public functions:
   public :: str_is_integer
   public :: str_is_real
-  public :: str_loc_end_token
   public :: str_loc_next_real
+  public :: str_lowercase
+  public :: str_uppercase
+
+  ! public subroutines:
+  public :: str_convert_to_lowercase
+  public :: str_convert_to_uppercase
   public :: str_loc_next_space
   public :: str_loc_next_token
-  public :: str_loc_start_token
-  public :: str_lowercase
+  public :: str_loc_next_delimiter
+  public :: str_parse_next_delimiter
+  public :: str_parse_next_space
   public :: str_parse_next_token
-  public :: str_uppercase
 
   ! parameters:
   integer, parameter :: CK = selected_char_kind('DEFAULT')
@@ -451,7 +454,7 @@ contains
 !   string (first non-delimiter character position -1). Returns 0 if no
 !   delimiter characters are found.
 !
-  pure function str_loc_end_delimeter( str ) result( val )
+  pure function str_loc_end_delimiter( str ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
     integer :: val
 
@@ -461,7 +464,27 @@ contains
     else
       val = val - 1
     end if
-  end function str_loc_end_delimeter
+  end function str_loc_end_delimiter
+!===============================================================================
+
+!===============================================================================
+! str_loc_end_space:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure function str_loc_end_space( str ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer :: val
+
+    val = verify(str, SPACES)
+    if (val == 0) then
+      val = len(str)
+    else
+      val = val - 1
+    end if
+  end function str_loc_end_space
 !===============================================================================
 
 !===============================================================================
@@ -483,20 +506,6 @@ contains
       val = val - 1
     end if
   end function str_loc_end_token
-!===============================================================================
-
-!===============================================================================
-! str_loc_next_delimeter:
-!
-!   Returns the location of the first delimiter character in the given string.
-!   Returns 0 if no delimiter is found.
-!
-  pure function str_loc_next_delimiter( str ) result( val )
-    character(kind=CK,len=*), intent(in)  :: str
-    integer :: val
-
-    val = scan(str, DELIMITERS)
-  end function str_loc_next_delimiter
 !===============================================================================
 
 !===============================================================================
@@ -605,38 +614,141 @@ contains
 !===============================================================================
 
 !===============================================================================
+! str_loc_next_delimiter:
+!
+!   Returns the location of the start and end of the next delimiter substring.
+!   Returns 0 if no delimiter is found.
+!
+  pure subroutine str_loc_next_delimiter( str, i0, i1, start )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(inout) :: i0
+    integer, intent(inout) :: i1
+    integer, intent(in), optional :: start
+    ! local variables:
+    integer :: i
+
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
+
+    i0 = str_loc_start_delimiter(str(i:))
+    if (i0 == 0) then
+      i1 = 0
+    else
+      i0 = i0 + i - 1
+      i1 = i0 + str_loc_end_delimiter(str(i0:)) - 1
+    end if
+  end subroutine str_loc_next_delimiter
+!===============================================================================
+
+!===============================================================================
 ! str_loc_next_space:
 !
-!   Returns the location of the first space in the given string. Returns 0 if no
-!   space is found.
+!   Returns the location of the start and end of the next space substring.
+!   Returns 0 if no space is found.
 !
-  pure function str_loc_next_space( str ) result( val )
+  pure subroutine str_loc_next_space( str, i0, i1, start )
     character(kind=CK,len=*), intent(in)  :: str
-    integer :: val
+    integer, intent(inout) :: i0
+    integer, intent(inout) :: i1
+    integer, intent(in), optional :: start
+    ! local variables:
+    integer :: i
 
-    val = scan(str, SPACES)
-  end function str_loc_next_space
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
+
+    i0 = str_loc_start_space(str(i:))
+    if (i0 == 0) then
+      i1 = 0
+    else
+      i0 = i0 + i - 1
+      i1 = i0 + str_loc_end_space(str(i0:)) - 1
+    end if
+  end subroutine str_loc_next_space
 !===============================================================================
 
 !===============================================================================
 ! str_loc_next_token:
 !
-!   Returns the location of the last delimiter from the start of the given
-!   string (first non-delimiter character position -1). Returns 0 if no
-!   delimiter characters are found.
+!   Returns the location of the start and end of the next token substring.
+!   Returns 0 if no token is found.
 !
-  pure subroutine str_loc_next_token( str, i0, i1 )
+  pure subroutine str_loc_next_token( str, i0, i1, start )
     character(kind=CK,len=*), intent(in)  :: str
     integer, intent(inout) :: i0
     integer, intent(inout) :: i1
+    integer, intent(in), optional :: start
+    ! local variables:
+    integer :: i
 
-    i0 = str_loc_start_token(str)
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
+
+    i0 = str_loc_start_token(str(i:))
     if (i0 == 0) then
       i1 = 0
     else
+      i0 = i0 + i - 1
       i1 = i0 + str_loc_end_token(str(i0:)) - 1
     end if
   end subroutine str_loc_next_token
+!===============================================================================
+
+!===============================================================================
+! str_loc_start_delimiter:
+!
+!   Returns the location of the first delimiter character. Returns 0 if no
+!   delimiter characters are found.
+!
+  pure function str_loc_start_delimiter( str, start ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(in), optional :: start
+    integer :: val
+    ! local variables:
+    integer :: i
+
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
+
+    val = scan(str(i:), DELIMITERS)
+    if (val > 0) val = val + i - 1
+  end function str_loc_start_delimiter
+!===============================================================================
+
+!===============================================================================
+! str_loc_start_space:
+!
+!   Returns the location of the first space in the given string. Returns 0 if no
+!   space is found.
+!
+  pure function str_loc_start_space( str, start ) result( val )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(in), optional :: start
+    integer :: val
+    ! local variables:
+    integer :: i
+
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
+
+    val = scan(str(i:), SPACES)
+    if (val > 0) val = val + i - 1
+  end function str_loc_start_space
 !===============================================================================
 
 !===============================================================================
@@ -645,12 +757,22 @@ contains
 !   Returns the location of the first valid token character. Returns 0 if no
 !   valid token characters are found.
 !
-  pure function str_loc_start_token( str ) result( val )
+  pure function str_loc_start_token( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(in), optional :: start
     integer :: val
+    ! local variables:
+    integer :: i
+
+    if (present(start)) then
+      i = start
+    else
+      i = 1
+    end if
 
     ! find the first non-delimiter character
-    val = verify(str, DELIMITERS)
+    val = verify(str(i:), DELIMITERS)
+    if (val > 0) val = val + i - 1
   end function str_loc_start_token
 !===============================================================================
 
@@ -668,6 +790,56 @@ contains
 !===============================================================================
 
 !===============================================================================
+! str_parse_next_delimiter:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure subroutine str_parse_next_delimiter( str, i, delimiter )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(inout) :: i
+    character(kind=CK,len=:), allocatable, intent(out) :: delimiter
+    ! local characters:
+    integer :: i0, i1
+
+    call str_loc_next_delimiter(str, i0, i1, start=i)
+    if (i0 == 0) then
+      delimiter = ''
+      i = len_trim(str)
+    else
+      delimiter = str(i0:i1)
+      i = i1 + 1
+    end if
+  end subroutine str_parse_next_delimiter
+!===============================================================================
+
+!===============================================================================
+! str_parse_next_space:
+!
+!   Returns the location of the last delimiter from the start of the given
+!   string (first non-delimiter character position -1). Returns 0 if no
+!   delimiter characters are found.
+!
+  pure subroutine str_parse_next_space( str, i, sp )
+    character(kind=CK,len=*), intent(in)  :: str
+    integer, intent(inout) :: i
+    character(kind=CK,len=:), allocatable, intent(out) :: sp
+    ! local characters:
+    integer :: i0, i1
+
+    call str_loc_next_space(str, i0, i1, start=i)
+    if (i0 == 0) then
+      sp = ''
+      i = len_trim(str)
+    else
+      sp = str(i0:i1)
+      i = i1 + 1
+    end if
+  end subroutine str_parse_next_space
+!===============================================================================
+
+!===============================================================================
 ! str_parse_next_token:
 !
 !   Returns the location of the last delimiter from the start of the given
@@ -681,13 +853,11 @@ contains
     ! local characters:
     integer :: i0, i1
 
-    call str_loc_next_token(str(i:), i0, i1)
+    call str_loc_next_token(str, i0, i1, start=i)
     if (i0 == 0) then
       token = ''
       i = len_trim(str)
     else
-      i0 = i0 + i - 1
-      i1 = i1 + i - 1
       token = str(i0:i1)
       i = i1 + 1
     end if
