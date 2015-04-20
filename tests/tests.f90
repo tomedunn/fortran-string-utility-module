@@ -23,6 +23,11 @@ program main
   write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
 
+  write(*,'("function STR_IS_NUMBER:")')
+  call TEST_str_is_number(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
+
+
   write(*,'("function STR_IS_REAL:")')
   call TEST_str_is_real(results)
   write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
@@ -70,7 +75,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_convert_to_uppercase:
 !
   subroutine TEST_str_convert_to_uppercase( results )
     logical, allocatable, intent(out) :: results(:)
@@ -90,7 +95,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_is_integer:
 !
   subroutine TEST_str_is_integer( results )
     logical, allocatable, intent(out) :: results(:)
@@ -107,7 +112,33 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_is_number:
+!
+  subroutine TEST_str_is_number( results )
+    logical, allocatable, intent(out) :: results(:)
+    ! local parameters:
+    integer, parameter :: nTests = 12
+
+    allocate(results(nTests))
+
+    results(01) = str_is_number(' 1       ')
+    results(02) = str_is_number(' +1      ')
+    results(03) = str_is_number(' +1e0    ')
+    results(04) = str_is_number(' +1e+0   ')
+    results(05) = str_is_number(' +1.     ')
+    results(06) = str_is_number(' +1.0    ')
+    results(07) = str_is_number(' +1.d0   ')
+    results(08) = str_is_number(' +1.0d0  ')
+    results(09) = str_is_number(' +1.0d+0 ')
+    results(10) = str_is_number(' +1.0d+0 ')
+
+    results(11) = .not.str_is_number(' -       ')
+    results(12) = .not.str_is_number(' .d+00   ')
+  end subroutine TEST_str_is_number
+!===============================================================================
+
+!===============================================================================
+! TEST_str_is_real:
 !
   subroutine TEST_str_is_real( results )
     logical, allocatable, intent(out) :: results(:)
@@ -128,7 +159,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_loc_next_real:
 !
   subroutine TEST_str_loc_next_real( results )
     logical, allocatable, intent(out) :: results(:)
@@ -142,7 +173,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_parse_next_delimiter:
 !
   subroutine TEST_str_parse_next_delimiter( results )
     logical, allocatable, intent(out) :: results(:)
@@ -166,7 +197,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_parse_next_space:
 !
   subroutine TEST_str_parse_next_space( results )
     logical, allocatable, intent(out) :: results(:)
@@ -190,7 +221,7 @@ contains
 !===============================================================================
 
 !===============================================================================
-! TEST_str_convert_to_lowercase:
+! TEST_str_parse_next_token:
 !
   subroutine TEST_str_parse_next_token( results )
     logical, allocatable, intent(out) :: results(:)
