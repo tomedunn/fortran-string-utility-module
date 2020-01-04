@@ -792,15 +792,15 @@ contains
 !   string (first non-delimiter character position -1). Returns 0 if no
 !   delimiter characters are found.
 !
-  pure function str_loc_end_delimiter( str, iStart ) result( val )
+  pure function str_loc_end_delimiter( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
@@ -821,15 +821,15 @@ contains
 !   string (first non-delimiter character position -1). Returns 0 if no
 !   delimiter characters are found.
 !
-  pure function str_loc_end_space( str, iStart ) result( val )
+  pure function str_loc_end_space( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
@@ -849,15 +849,15 @@ contains
 !   Returns the location of the last valid token character starting from the
 !   begining of the string. Returns 0 if no valid token characters were found.
 !
-  pure function str_loc_end_token( str, iStart ) result( val )
+  pure function str_loc_end_token( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
@@ -1069,15 +1069,15 @@ contains
 !   Returns the location of the first delimiter character. Returns 0 if no
 !   delimiter characters are found.
 !
-  pure function str_loc_start_delimiter( str, iStart ) result( val )
+  pure function str_loc_start_delimiter( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
@@ -1093,15 +1093,15 @@ contains
 !   Returns the location of the first space in the given string. Returns 0 if no
 !   space is found.
 !
-  pure function str_loc_start_space( str, iStart ) result( val )
+  pure function str_loc_start_space( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
@@ -1117,15 +1117,15 @@ contains
 !   Returns the location of the first valid token character. Returns 0 if no
 !   valid token characters are found.
 !
-  pure function str_loc_start_token( str, iStart ) result( val )
+  pure function str_loc_start_token( str, start ) result( val )
     character(kind=CK,len=*), intent(in)  :: str
-    integer, intent(in), optional :: iStart
+    integer, intent(in), optional :: start
     integer :: val
     ! local variables:
     integer :: i
 
-    if (present(iStart)) then
-      i = iStart
+    if (present(start)) then
+      i = start
     else
       i = 1
     end if
