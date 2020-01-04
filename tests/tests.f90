@@ -23,6 +23,11 @@ program main
   write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
 
 
+  write(*,'("function STR_IS_NAME:")')
+  call TEST_str_is_name(results)
+  write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
+
+
   write(*,'("function STR_IS_NUMBER:")')
   call TEST_str_is_number(results)
   write(*,'("  passed ",I0,"/",I0," tests.")') count(results), size(results)
@@ -109,6 +114,32 @@ contains
     results(3) = str_is_integer(' +1e0  ')
     results(4) = str_is_integer(' +1e+0 ')
   end subroutine TEST_str_is_integer
+!===============================================================================
+
+!===============================================================================
+! TEST_str_is_name:
+!
+  subroutine TEST_str_is_name( results )
+    logical, allocatable, intent(out) :: results(:)
+    ! local parameters:
+    integer, parameter :: nTests = 12
+
+    allocate(results(nTests))
+
+    results(01) = str_is_name(' n        ')
+    results(02) = str_is_name(' name     ')
+    results(03) = str_is_name(' name_    ')
+    results(04) = str_is_name(' name_1   ')
+    results(05) = str_is_name(' name_one ')
+    results(06) = str_is_name(' name1    ')
+    results(07) = str_is_name(' name1_   ')
+
+    results(08) = .not.str_is_name(' _      ')
+    results(09) = .not.str_is_name(' _name  ')
+    results(10) = .not.str_is_name(' 1      ')
+    results(11) = .not.str_is_name(' 1name  ')
+    results(12) = .not.str_is_name(' name 1 ')
+  end subroutine TEST_str_is_name
 !===============================================================================
 
 !===============================================================================

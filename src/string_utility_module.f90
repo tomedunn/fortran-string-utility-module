@@ -8,6 +8,7 @@ module string_utility_module
 
   ! public functions:
   public :: str_is_integer
+  public :: str_is_name
   public :: str_is_number
   public :: str_is_real
   public :: str_loc_next_real
@@ -152,7 +153,7 @@ contains
 !===============================================================================
 ! ch_convert_to_lowercase:
 !
-!   If given an upper case characer, converts it to it's lower case equivalent.
+!   If given an upper case characer, converts it to lower case.
 !
   pure subroutine ch_convert_to_lowercase( ch )
     character(kind=CK,len=1), intent(inout) :: ch
@@ -167,7 +168,7 @@ contains
 !===============================================================================
 ! ch_convert_to_uppercase:
 !
-!   If given a lower case characer, converts it to it's upper case equivalent.
+!   If given a lower case characer, converts it to upper case.
 !
   pure subroutine ch_convert_to_uppercase( ch )
     character(kind=CK,len=1), intent(inout) :: ch
@@ -187,7 +188,7 @@ contains
   pure subroutine str_convert_to_lowercase( str )
     character(kind=CK,len=*), intent(inout) :: str
     ! local variables:
-    integer :: i, ic
+    integer :: i
 
     do i = 1, len_trim(str)
       call ch_convert_to_lowercase(str(i:i))
@@ -198,13 +199,12 @@ contains
 !===============================================================================
 ! str_convert_to_uppercase:
 !
-!   Takes character array and coverts all characters a-z to upper-case.
-!   Conversion is done in place.
+!   Converts lower case characters in the given character string to upper case.
 !
   pure subroutine str_convert_to_uppercase( str )
     character(kind=CK,len=*), intent(inout) :: str
     ! local variables:
-    integer :: i, ic
+    integer :: i
 
     do i = 1, len_trim(str)
       call ch_convert_to_uppercase(str(i:i))
@@ -378,6 +378,87 @@ contains
       end select
     end if
   end function str_is_integer
+!===============================================================================
+
+!===============================================================================
+! str_is_name:
+!
+!   Returns .TRUE. if the given string contains a name. Returns .FALSE.
+!   otherwise.
+!
+!       ans   |F |T  |T        |T|
+!       stage |0 |1  |2        |3|
+!       regex |   \w [\w\_\d]*   |
+!
+  function str_is_name( str, allow_spaces ) result( ans )
+    character(kind=CK,len=*), intent(in) :: str
+    logical, intent(in), optional :: allow_spaces
+    logical :: ans
+    ! local variables:
+    integer :: i
+    logical :: no_spaces
+    logical :: not_name
+    integer :: stage
+
+    if (present(allow_spaces)) then
+      no_spaces = .not.allow_spaces
+    else
+      no_spaces = .false.
+    end if
+
+    ! determine number type and length
+    stage = 0
+    not_name = .false.
+    do i = 1, len(str)
+      select case(str(i:i))
+      case (space,tab)
+        ! white space
+        select case (stage)
+        case (0,3)
+          not_name = no_spaces
+        case (1,2)
+          not_name = no_spaces
+          stage = 3
+        end select
+      case ('a':'z','A':'Z')
+        ! character
+        select case(stage)
+        case(0)
+          stage = 1
+        case(1:2)
+          continue
+        case default
+          not_name = .true.
+        end select
+      case ('0':'9','_')
+        ! digit or underscore
+        select case(stage)
+        case(1)
+          stage = 2
+        case(2)
+          continue
+        case default
+          not_name = .true.
+        end select
+      case default
+        not_name = .true.
+      end select
+
+      if (not_name) exit
+    end do
+
+    ! determine if name
+    if (not_name) then
+      ans = .false.
+    else
+      select case (stage)
+      case (1:3)
+        ans = .true.
+      case default
+        ans = .false.
+      end select
+    end if
+  end function str_is_name
 !===============================================================================
 
 !===============================================================================
@@ -1071,9 +1152,10 @@ contains
 !===============================================================================
 ! str_parse_next_delimiter:
 !
-!   Returns the location of the last delimiter from the start of the given
-!   string (first non-delimiter character position -1). Returns 0 if no
-!   delimiter characters are found.
+!   Searches through the given string, starting from location i, and returns the
+!   first delimiter substring found. The value of is then set to the string
+!   location just after the end of the returned substring. If no such substring
+!   is found the value of i is set the length of the given string.
 !
   pure subroutine str_parse_next_delimiter( str, i, delimiter )
     character(kind=CK,len=*), intent(in)  :: str
@@ -1096,9 +1178,10 @@ contains
 !===============================================================================
 ! str_parse_next_space:
 !
-!   Returns the location of the last delimiter from the start of the given
-!   string (first non-delimiter character position -1). Returns 0 if no
-!   delimiter characters are found.
+!   Searches through the given string, starting from location i, and returns the
+!   first space substring found. The value of is then set to the string location
+!   just after the end of the returned substring. If no such substring is found
+!   the value of i is set the length of the given string.
 !
   pure subroutine str_parse_next_space( str, i, sp )
     character(kind=CK,len=*), intent(in)  :: str
@@ -1121,9 +1204,10 @@ contains
 !===============================================================================
 ! str_parse_next_token:
 !
-!   Returns the location of the last delimiter from the start of the given
-!   string (first non-delimiter character position -1). Returns 0 if no
-!   delimiter characters are found.
+!   Searches through the given string, starting from location i, and returns the
+!   first token substring found. The value of is then set to the string location
+!   just after the end of the returned substring. If no such substring is found
+!   the value of i is set the length of the given string.
 !
   pure subroutine str_parse_next_token( str, i, token )
     character(kind=CK,len=*), intent(in)  :: str
