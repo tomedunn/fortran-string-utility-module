@@ -507,7 +507,7 @@ contains
         case ('+','-')
           stage = 1
         case ('0':'9')
-          stage = 2
+          stage = 11
         case default
           stage = -1
         end select
